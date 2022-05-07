@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.DataTransferObjects
+{ public class CreateAddressDto
+    {
+        public string City { get; set; }
+        public string Street { get; set; }
+        public int HouseNumber { get; set; }
+
+        public CreateAddressDto(string city, string street, int houseNumber)
+        {
+            (City, Street, HouseNumber) = (city, street, houseNumber);
+        }
+    }
+}
