@@ -1,6 +1,4 @@
-﻿using System.Data;
-using System.Reflection.Emit;
-using Application.DataTransferObjects;
+﻿using Application.DataTransferObjects;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -9,8 +7,10 @@ namespace Application.Services
 {
     public class AddressService : IAddressService
     {
+        //Variables:
         private readonly IAddressRepository _addressRepository;
 
+        //Constructors:
         public AddressService(IAddressRepository addressRepository)
         {
             _addressRepository = addressRepository;
@@ -20,18 +20,15 @@ namespace Application.Services
         public AddressDto? GetLastAdded()
         {
             var address = _addressRepository.GetLastAdded();
-
-            if (address == null) return null;
-            return new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
         }
 
         public IEnumerable<AddressDto>? GetByCity(string city)
         {
             var addresses = _addressRepository.GetByCity(city);
-            var output = new SortedSet<AddressDto>();
-
             if (addresses == null) return null;
 
+            var output = new SortedSet<AddressDto>();
             foreach (var address in addresses)
                 output.Add(new AddressDto(address.Id, address.City, address.Street, address.HouseNumber));
 

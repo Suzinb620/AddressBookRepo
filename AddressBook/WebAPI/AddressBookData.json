@@ -4,41 +4,20 @@
     "City": "string",
     "Street": "string",
     "HouseNumber": 10,
-    "CreatedDateTime": "2022-05-07T13:16:46.9515339Z"
+    "CreatedDateTime": "2022-05-07T22:39:35.7362962Z"
   },
   {
     "Id": 2,
     "City": "string",
     "Street": "string",
     "HouseNumber": 100,
-    "CreatedDateTime": "2022-05-07T13:16:52.0886542Z"
+    "CreatedDateTime": "2022-05-07T22:48:17.5238056Z"
   },
   {
     "Id": 3,
     "City": "string",
     "Street": "string",
-    "HouseNumber": 1000,
-    "CreatedDateTime": "2022-05-07T13:35:40.6707076Z"
-  },
-  {
-    "Id": 4,
-    "City": "string",
-    "Street": "Nowa",
-    "HouseNumber": 10,
-    "CreatedDateTime": "2022-05-07T13:36:47.4277581Z"
-  },
-  {
-    "Id": 5,
-    "City": "Nowa",
-    "Street": "Nowa",
-    "HouseNumber": 10,
-    "CreatedDateTime": "2022-05-07T13:37:11.6587241Z"
-  },
-  {
-    "Id": 6,
-    "City": "string",
-    "Street": "string",
-    "HouseNumber": 10,
-    "CreatedDateTime": "2022-05-07T16:04:48.0830517Z"
+    "HouseNumber": 110,
+    "CreatedDateTime": "2022-05-07T22:53:16.4185772Z"
   }
 ]

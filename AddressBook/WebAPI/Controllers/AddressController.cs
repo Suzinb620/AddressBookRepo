@@ -1,7 +1,5 @@
-﻿using System.Security.Cryptography;
-using Application.DataTransferObjects;
+﻿using Application.DataTransferObjects;
 using Application.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -10,8 +8,10 @@ namespace WebAPI.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
+        //Variables:
         private readonly IAddressService _addressService;
 
+        //Constructors:
         public AddressController(IAddressService addressService)
         {
             _addressService = addressService;
@@ -22,24 +22,21 @@ namespace WebAPI.Controllers
         public IActionResult Get()
         {
             var address = _addressService.GetLastAdded();
-            if (address == null) return NotFound();
-            return Ok(address);
+            return address == null ? NotFound() : Ok(address);
         }
 
         [HttpGet("{city}")]
         public IActionResult Get(string city)
         {
             var addresses = _addressService.GetByCity(city);
-            if(addresses == null) return NotFound();
-            return Ok(addresses);
+            return addresses == null ? NotFound() : Ok(addresses);
         }
 
         [HttpPost]
         public IActionResult Post(CreateAddressDto address)
         {
             var created = _addressService.Add(address);
-            if (created == null) return Conflict();
-            return Created($"api/posts/{created.Id}", created);
+            return created == null ? Conflict() : Created($"api/posts/{created.Id}", created);
         }
     }
 }

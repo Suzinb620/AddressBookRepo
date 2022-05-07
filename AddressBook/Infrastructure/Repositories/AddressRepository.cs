@@ -7,7 +7,7 @@ namespace Infrastructure.Repositories
     public class AddressRepository : IAddressRepository
     {
         //Variables:
-        private readonly ISet<Address>? _addresses = new SortedSet<Address>();
+        private readonly ISet<Address> _addresses = new SortedSet<Address>();
         private static readonly string _path = Directory.GetCurrentDirectory() + "/AddressBookData.json";
 
         //Constructors:
@@ -23,19 +23,19 @@ namespace Infrastructure.Repositories
 
         public IEnumerable<Address>? GetByCity(string city)
         {
-            if (_addresses == null) return null;
+            if (!_addresses.Any()) return null;
 
             var output = new SortedSet<Address>();
             foreach (var address in _addresses)
                 if (address.City == city)
                     output.Add(address);
 
-            return output;
+            return output.Any() ? output : null;
         }
 
         public Address? Add(Address address)
         {
-            if (_addresses == null) address.Id = 1;
+            if (!_addresses.Any()) address.Id = 1;
             else address.Id = _addresses.Count() + 1;
 
             if (!_addresses.Add(address)) return null;
