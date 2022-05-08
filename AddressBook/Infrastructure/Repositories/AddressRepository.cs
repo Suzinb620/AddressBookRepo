@@ -36,7 +36,7 @@ namespace Infrastructure.Repositories
         public Address? Add(Address address)
         {
             if (!_addresses.Any()) address.Id = 1;
-            else address.Id = _addresses.Count() + 1;
+            else address.Id = _addresses.Count + 1;
 
             if (!_addresses.Add(address)) return null;
             File.Delete(_path);

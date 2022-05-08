@@ -8,17 +8,17 @@ namespace Domain.Entities
         public string City { get; set; }
         public string Street { get; set; }
         public int HouseNumber { get; set; }
-        public DateTime CreatedDateTime { get; init; }
+        private DateTime Created { get; init; }
 
         //Constructors:
         public Address(int id, string city, string street, int houseNumber)
         {
             (Id, City, Street, HouseNumber) = (id, city, street, houseNumber);
-            CreatedDateTime = DateTime.UtcNow;
+            Created = DateTime.UtcNow;
         }
 
         //Methods:
-        public int CompareTo(Address? address) => address == null ? 1 : Id.CompareTo(address.Id);
+        public int CompareTo(Address? address) => address == null ? 1 : Created.CompareTo(address.Created);
 
         public override bool Equals(object? obj)
         {
