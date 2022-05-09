@@ -28,20 +28,13 @@ namespace Application.Services
             var addresses = _addressRepository.GetByCity(city);
             if (addresses == null) return null;
 
-            var output = new SortedSet<AddressDto>();
+            var output = new HashSet<AddressDto>();
             foreach (var address in addresses)
                 output.Add(new AddressDto(address.Id, address.City, address.Street, address.HouseNumber));
 
             return output;
         }
 
-        public AddressDto? Add(CreateAddressDto addressDto)
-        {
-            if (string.IsNullOrWhiteSpace(addressDto.City)) throw new Exception("Address cannot have an empty city");
-            if (string.IsNullOrWhiteSpace(addressDto.Street)) throw new Exception("Address cannot have an empty street");
-            if (addressDto.HouseNumber == 0) throw new Exception("Address cannot have 0 as the house number");
-
-            return _addressRepository.Add(new Address(0, addressDto.City, addressDto.Street, addressDto.HouseNumber)) == null ? null : GetLastAdded();
-        }
+        public AddressDto? Add(CreateAddressDto address) => _addressRepository.Add(new Address(address.City, address.Street, address.HouseNumber)) == null ? null : GetLastAdded();
     }
 }

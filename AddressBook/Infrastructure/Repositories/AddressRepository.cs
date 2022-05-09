@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Numerics;
+using System.Text.Json;
 using Domain.Entities;
 using Domain.Interfaces;
 
@@ -7,7 +8,7 @@ namespace Infrastructure.Repositories
     public class AddressRepository : IAddressRepository
     {
         //Variables:
-        private readonly ISet<Address> _addresses = new SortedSet<Address>();
+        private readonly ISet<Address> _addresses = new HashSet<Address>();
         private static readonly string _path = Directory.GetCurrentDirectory() + "/AddressBookData.json";
 
         //Constructors:
@@ -19,13 +20,13 @@ namespace Infrastructure.Repositories
         }
 
         //Methods:
-        public Address? GetLastAdded() => _addresses?.LastOrDefault();
+        public Address? GetLastAdded() => _addresses.MaxBy(address => address.Created);
 
         public IEnumerable<Address>? GetByCity(string city)
         {
             if (!_addresses.Any()) return null;
 
-            var output = new SortedSet<Address>();
+            var output = new HashSet<Address>();
             foreach (var address in _addresses)
                 if (address.City == city)
                     output.Add(address);
@@ -35,10 +36,8 @@ namespace Infrastructure.Repositories
 
         public Address? Add(Address address)
         {
-            if (!_addresses.Any()) address.Id = 1;
-            else address.Id = _addresses.Count + 1;
-
             if (!_addresses.Add(address)) return null;
+
             File.Delete(_path);
             File.AppendAllText(_path, JsonSerializer.Serialize(_addresses, new JsonSerializerOptions{WriteIndented = true}));
             return address;

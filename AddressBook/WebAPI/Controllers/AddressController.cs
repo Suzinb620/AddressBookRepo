@@ -10,13 +10,13 @@ namespace WebAPI.Controllers
     {
         //Variables:
         private readonly IAddressService _addressService;
-        //private readonly ILogger _logger;
+        private readonly ILogger _logger;
 
         //Constructors:
-        public AddressController(IAddressService addressService/*, ILogger logger*/)
+        public AddressController(IAddressService addressService, ILogger<AddressController> logger)
         {
             _addressService = addressService;
-            //_logger = logger;
+            _logger = logger;
         }
 
         //Methods:
