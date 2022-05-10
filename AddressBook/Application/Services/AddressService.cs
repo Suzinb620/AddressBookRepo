@@ -35,6 +35,11 @@ namespace Application.Services
             return output;
         }
 
-        public AddressDto? Add(CreateAddressDto address) => _addressRepository.Add(new Address(address.City, address.Street, address.HouseNumber)) == null ? null : GetLastAdded();
+        public AddressDto? Add(CreateAddressDto address)
+        {
+           var created = _addressRepository.Add(new Address(address.City, address.Street, address.HouseNumber));
+
+           return created == null ? null : new AddressDto(created.Id, created.City, created.Street, created.HouseNumber);
+        }
     }
 }
