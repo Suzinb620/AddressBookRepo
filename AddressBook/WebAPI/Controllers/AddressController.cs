@@ -1,4 +1,5 @@
-﻿using Application.DataTransferObjects;
+﻿using System.ComponentModel.DataAnnotations;
+using Application.DataTransferObjects;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,7 +53,7 @@ namespace WebAPI.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogError("Attempting to add address with invalid data");
-                return BadRequest();
+                return BadRequest(ModelState);
             }
 
             var created = _addressService.Add(address);
