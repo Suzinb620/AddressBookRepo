@@ -24,21 +24,46 @@ namespace WebAPI.Controllers
         public IActionResult Get()
         {
             var address = _addressService.GetLastAdded();
-            return address == null ? NotFound() : Ok(address);
+            if (address == null)
+            {
+                _logger.LogError("Attempting to get the last added address that not exist");
+                return NotFound();
+            }
+            _logger.LogInformation("Got the last added address");
+            return Ok(address);
         }
 
         [HttpGet("{city}")]
         public IActionResult Get(string city)
         {
             var addresses = _addressService.GetByCity(city);
-            return addresses == null ? NotFound() : Ok(addresses);
+            if (addresses == null)
+            {
+                _logger.LogError("Attempting to get addresses by entering not existing city name");
+                return NotFound();
+            }
+            _logger.LogInformation("Got the addresses by entering city name");
+            return Ok(addresses);
         }
 
         [HttpPost]
         public IActionResult Post(CreateAddressDto address)
         {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Attempting to add address with invalid data");
+                return BadRequest();
+            }
+
             var created = _addressService.Add(address);
-            return created == null ? Conflict() : Created($"api/posts/{created.Id}", created);
+            if (created == null)
+            {
+                _logger.LogError("Attempting to add currently existing address");
+                return Conflict();
+            }
+
+            _logger.LogInformation("Added new address");
+            return Created($"api/posts/{created.Id}", created);
         }
     }
 }

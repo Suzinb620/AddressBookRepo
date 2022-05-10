@@ -5,19 +5,16 @@ namespace Application.DataTransferObjects
     {
         [Required]
         [MaxLength(100)]
+        [RegularExpression("^[a-zA-Z]+\\-?[a-zA-Z]+$")]
         public string City { get; set; }
 
         [Required]
         [MaxLength(100)]
+        [RegularExpression("^[a-zA-Z]+(\\s?[a-zA-Z]+)*$")]
         public string Street { get; set; }
 
         [Required]
         [Range(1, 1000)]
         public int HouseNumber { get; set; }
-
-        public CreateAddressDto(string city, string street, int houseNumber)
-        {
-            (City, Street, HouseNumber) = (city, street, houseNumber);
-        }
     }
 }
