@@ -3,14 +3,15 @@
 namespace Application.DataTransferObjects
 { public class CreateAddressDto
     {
+        //Variables:
         [Required]
         [MaxLength(100)]
-        [RegularExpression("^[a-zA-Z]+\\-?[a-zA-Z]+$")]
+        [RegularExpression("^[a-zA-Z]+\\-?[a-zA-Z]+$")]  //Accepts upper and lower case letters and one hyphen
         public string City { get; set; }
 
         [Required]
         [MaxLength(100)]
-        [RegularExpression("^[a-zA-Z]+(\\s?[a-zA-Z]+)*$")]
+        [RegularExpression("^[a-zA-Z]+(\\s?[a-zA-Z]+)*$")] //Accepts upper and lower case letters and spaces
         public string Street { get; set; }
 
         [Required]
