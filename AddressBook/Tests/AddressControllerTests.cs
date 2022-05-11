@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Application.DataTransferObjects;
 using Application.Services;
+using DeepEqual.Syntax;
 using Domain.Entities;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -29,10 +30,11 @@ namespace Tests
 
             //Act
             var result = addressController.Get();
+            var expected = new AddressDto(address1.Id, address2.City, address2.Street, address2.HouseNumber);
 
             //Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(new AddressDto(address2.Id, address2.City, address2.Street, address2.HouseNumber), okResult.Value);
+            expected.ShouldDeepEqual(okResult.Value);
         }
 
         [Fact]
@@ -71,13 +73,14 @@ namespace Tests
 
             //Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            //Assert.Contains(new AddressDto(address2.Id, address2.City, address2.Street, address2.HouseNumber), okResult.Value);
-            //Assert.Contains(new AddressDto(address3.Id, address3.City, address3.Street, address3.HouseNumber), okResult.Value);
+            Assert.Contains(new AddressDto(address2.Id, address2.City, address2.Street, address2.HouseNumber), (IEnumerable<AddressDto>)okResult.Value!);
+            Assert.Contains(new AddressDto(address3.Id, address3.City, address3.Street, address3.HouseNumber), (IEnumerable<AddressDto>)okResult.Value!);
         }
 
         [Fact]
-        public void GetByCity_Returns_The_Correct_Elements_If_Entered_City_Not_Exists()
+        public void GetByCity_Returns_NotFound_Result_If_Entered_City_Not_Exists()
         {
+            //Arrange
             var address1 = new Address("Gliwice", "Stara Dorga", 218);
             var address2 = new Address("Bulowice", "Nowa Dorga", 600);
             var addresses = new HashSet<Address>
@@ -86,32 +89,40 @@ namespace Tests
                 address2
             };
             var addressRepository = new AddressRepository(addresses);
-            var addressesService = new AddressService(addressRepository);
+            var addressService = new AddressService(addressRepository);
+            var addressController = new AddressController(addressService, NullLogger<AddressController>.Instance);
 
-            Assert.Null(addressesService.GetByCity("Bielsko-Biala"));
+            //Act & Assert
+            Assert.IsType<NotFoundResult>(addressController.Get("Bielsko-Biala"));
         }
 
         [Fact]
-        public void Add_Returns_The_Actual_Added_Value()
+        public void Add_Returns_Returns_CreatedResult()
         {
+            //Arrange
             var address1 = new Address("Gliwice", "Stara Dorga", 218);
             var addresses = new HashSet<Address>
             {
                 address1
             };
             var addressRepository = new AddressRepository(addresses);
-            var addressesService = new AddressService(addressRepository);
+            var addressService = new AddressService(addressRepository);
+            var addressController = new AddressController(addressService, NullLogger<AddressController>.Instance);
             var nonExistedAddress = new CreateAddressDto { City = "Bulowice", Street = "Nowa Dorga", HouseNumber = 600 };
 
-            var result = addressesService.Add(nonExistedAddress);
-            var expected = addressesService.GetLastAdded();
+            //Act
+            var result = addressController.Post(nonExistedAddress);
+            var expected = addressService.GetLastAdded();
 
-            Assert.Equal(expected, result);
+            //Assert
+            var okResult = Assert.IsType<CreatedResult>(result);
+            expected.ShouldDeepEqual(okResult.Value);
         }
 
         [Fact]
-        public void Add_Returns_Null_Because_Address_Already_In_Database()
+        public void Add_Returns_ConflictResult()
         {
+            //Arrange
             var address1 = new Address("Gliwice", "Stara Dorga", 218);
             var address2 = new Address("Bulowice", "Nowa Dorga", 600);
             var addresses = new HashSet<Address>
@@ -120,10 +131,12 @@ namespace Tests
                 address2
             };
             var addressRepository = new AddressRepository(addresses);
-            var addressesService = new AddressService(addressRepository);
+            var addressService = new AddressService(addressRepository);
+            var addressController = new AddressController(addressService, NullLogger<AddressController>.Instance);
             var existedAddress = new CreateAddressDto { City = "Bulowice", Street = "Nowa Dorga", HouseNumber = 600 };
 
-            Assert.Null(addressesService.Add(existedAddress));
+            //Act & Assert
+            Assert.IsType<ConflictResult>(addressController.Post(existedAddress));
         }
     }
 }

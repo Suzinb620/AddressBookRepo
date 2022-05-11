@@ -10,6 +10,7 @@ namespace Tests
         [Fact]
         public void GetLastAdded_Returns_The_Correct_Element_If_Data_Not_Empty()
         {
+            //Arrange
             var address1 = new Address("Bulowice", "Stara Dorga", 218);
             var address2 = new Address("Bulowice", "Nowa Dorga", 600);
             var addresses = new HashSet<Address>
@@ -17,8 +18,10 @@ namespace Tests
                 address1,
                 address2
             };
+
+            //Act & Assert
             var addressBook = new AddressRepository(addresses);
-            Assert.Equal(address2, addressBook.GetLastAdded());
+            Assert.Same(address2, addressBook.GetLastAdded());
         }
 
         [Fact]
@@ -43,8 +46,8 @@ namespace Tests
                 address4
             };
             var addressBook = new AddressRepository(addresses);
-            Assert.Contains(address2, addressBook.GetByCity("Bulowice"));
-            Assert.Contains(address3, addressBook.GetByCity("Bulowice"));
+            Assert.Contains(address2, addressBook.GetByCity("Bulowice")!);
+            Assert.Contains(address3, addressBook.GetByCity("Bulowice")!);
         }
 
         [Fact]
@@ -71,7 +74,7 @@ namespace Tests
                 address1
             };
             var addressBook = new AddressRepository(addresses);
-            Assert.Equal(address2, addressBook.Add(address2));
+            Assert.Same(address2, addressBook.Add(address2));
         }
 
         [Fact]
