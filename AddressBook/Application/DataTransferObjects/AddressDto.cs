@@ -14,5 +14,14 @@ namespace Application.DataTransferObjects
         {
             (Id, City, Street, HouseNumber) = (id, city, street, houseNumber);
         }
+
+        //Methods:
+        public override bool Equals(object? obj)
+        {
+            if (obj is not AddressDto address) return false;
+            return City == address.City && Street == address.Street && HouseNumber == address.HouseNumber;
+        }
+
+        public override int GetHashCode() => HashCode.Combine(City, Street, HouseNumber);
     }
 }

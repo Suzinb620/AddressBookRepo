@@ -5,5 +5,12 @@
     "Street": "Stara Droga",
     "HouseNumber": 190,
     "Created": "2022-05-10T16:39:54.8811231Z"
+  },
+  {
+    "Id": "8d4ad753-d4be-41d9-a821-88a2173dc363",
+    "City": "Gliwice",
+    "Street": "Nowa Droga",
+    "HouseNumber": 1000,
+    "Created": "2022-05-10T17:29:14.857399Z"
   }
 ]

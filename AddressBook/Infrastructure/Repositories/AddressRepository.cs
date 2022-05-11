@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Domain.Entities;
 using Domain.Interfaces;
 
@@ -9,14 +8,16 @@ namespace Infrastructure.Repositories
     {
         //Variables:
         private readonly ISet<Address> _addresses = new HashSet<Address>();
-        private static readonly string _path = Directory.GetCurrentDirectory() + "/AddressBookData.json";
+        private readonly string _path = Directory.GetCurrentDirectory() + "/AddressBookData.json";
 
         //Constructors:
-        public AddressRepository()
+        public AddressRepository(ISet<Address>? data = null)
         {
-            if (File.Exists(_path))
-                if(new FileInfo(_path).Length != 0)
-                    _addresses = (JsonSerializer.Deserialize<ISet<Address>>(File.ReadAllText(_path))!);
+            if (data != null) _addresses = data;
+            else
+                if (File.Exists(_path))
+                    if (new FileInfo(_path).Length != 0)
+                        _addresses = (JsonSerializer.Deserialize<ISet<Address>>(File.ReadAllText(_path))!);
         }
 
         //Methods:
