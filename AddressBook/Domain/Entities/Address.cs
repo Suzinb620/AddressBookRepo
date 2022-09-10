@@ -1,13 +1,29 @@
-﻿
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
 namespace Domain.Entities
 {
     public class Address
     {
         //Variables:
-        public Guid Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public Guid Id { get; init; }
+        
+        [BsonElement]
+        [BsonRepresentation(BsonType.String)]
         public string City { get; set; }
+        
+        [BsonElement]
+        [BsonRepresentation(BsonType.String)]
         public string Street { get; set; }
+        
+        [BsonElement]
+        [BsonRepresentation(BsonType.Int64)]
         public int HouseNumber { get; set; }
+        
+        [BsonElement]
+        [BsonRepresentation(BsonType.DateTime)]
         public DateTime Created { get; init; }
 
         //Constructors:

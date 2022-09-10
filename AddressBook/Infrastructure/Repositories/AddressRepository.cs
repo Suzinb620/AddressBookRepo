@@ -1,46 +1,104 @@
 ﻿using System.Text.Json;
 using Domain.Entities;
 using Domain.Interfaces;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace Infrastructure.Repositories
 {
     public class AddressRepository : IAddressRepository
     {
-        //Variables:
-        private readonly ISet<Address> _addresses = new HashSet<Address>();
-        private readonly string _path = Directory.GetCurrentDirectory() + "/AddressBookData.json";
+        // Variables:
+        private readonly IMongoCollection<Address> _addresses;
+        // TODO: add lock
 
-        //Constructors:
-        public AddressRepository(ISet<Address>? data = null)
+        // Constructors:
+        public AddressRepository(IOptions<MongoDbSettings> mongoDbSettings)
         {
-            if (data != null) _addresses = data;
-            else
-                if (File.Exists(_path))
-                    if (new FileInfo(_path).Length != 0)
-                        _addresses = (JsonSerializer.Deserialize<ISet<Address>>(File.ReadAllText(_path))!);
+            var mongoClient = new MongoClient(mongoDbSettings.Value.ConnectionString);
+
+            _addresses = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName)
+                .GetCollection<Address>(mongoDbSettings.Value.CollectionName);
         }
 
-        //Methods:
-        public Address? GetLastAdded() => _addresses.MaxBy(address => address.Created);
+        // Methods:
+        public Address? GetLastAdded()
+        {
+            return _addresses.Find(new BsonDocument())
+                .ToList()
+                .MaxBy(address => address.Created);
+        }
+
+        public async Task<Address?> GetLastAddedAsync()
+        {
+            var addresses = await _addresses.FindAsync(new BsonDocument());
+            var addressesList = await addresses.ToListAsync();
+            
+            return await Task.Run(() =>
+            {
+                return addressesList.AsParallel().MaxBy(address => address.Created);
+            });
+        }
 
         public IEnumerable<Address>? GetByCity(string city)
         {
-            if (!_addresses.Any()) return null;
+            var addressesList = _addresses.Find(new BsonDocument()).ToList();
 
-            var output = new HashSet<Address>();
-            foreach (var address in _addresses)
-                if (address.City == city)
-                    output.Add(address);
+            if (!addressesList.Any())
+            {
+                return null;
+            }
 
+            var output = addressesList.Where(address => address.City == city).ToHashSet();
+            
+            return output.Any() ? output : null;
+        }
+        
+        public async Task<IEnumerable<Address>?> GetByCityAsync(string city)
+        {
+            var addresses = await _addresses.FindAsync(new BsonDocument());
+            var addressesList = await addresses.ToListAsync();
+            
+            if (!addressesList.Any())
+            {
+                return null;
+            }
+
+            var output =  await Task.Run(() =>
+            {
+                return addressesList.AsParallel()
+                    .Where(address => address.City == city)
+                    .ToHashSet();
+            });
+            
             return output.Any() ? output : null;
         }
 
         public Address? Add(Address address)
         {
-            if (!_addresses.Add(address)) return null;
+            var addressesList = _addresses.Find(new BsonDocument()).ToList();
+            
+            if (!addressesList.Contains(address))
+            {
+                return null;
+            }
 
-            File.Delete(_path);
-            File.AppendAllText(_path, JsonSerializer.Serialize(_addresses, new JsonSerializerOptions{WriteIndented = true}));
+            _addresses.InsertOne(address);
+            return address;
+        }
+        
+        public async Task<Address?> AddAsync(Address address)
+        {
+            var addresses = await _addresses.FindAsync(new BsonDocument());
+            var addressesList = await addresses.ToListAsync();
+            
+            if (!addressesList.Contains(address))
+            {
+                return null;
+            }
+
+            await _addresses.InsertOneAsync(address);
             return address;
         }
     }

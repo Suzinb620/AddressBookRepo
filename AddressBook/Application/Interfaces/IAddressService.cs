@@ -5,7 +5,10 @@ namespace Application.Interfaces
     public interface IAddressService
     {
         AddressDto? GetLastAdded();
-        IEnumerable<AddressDto>? GetByCity(string city);
+        Task<AddressDto?> GetLastAddedAsync();        
+        IEnumerable<AddressDto>? GetByCity(string? city);
+        Task<IEnumerable<AddressDto>?> GetByCityAsync(string? city);
         AddressDto? Add(CreateAddressDto addressDto);
+        Task<AddressDto?> AddAsync(CreateAddressDto addressDto);
     }
 }
