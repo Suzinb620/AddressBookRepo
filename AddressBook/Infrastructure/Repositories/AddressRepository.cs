@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Domain.Interfaces;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -14,18 +14,21 @@ namespace Infrastructure.Repositories
         // TODO: add lock
 
         // Constructors:
-        public AddressRepository(IOptions<MongoDbSettings> mongoDbSettings)
+        public AddressRepository(IConfiguration config)
         {
-            var mongoClient = new MongoClient(mongoDbSettings.Value.ConnectionString);
+            var MongoDbConfig = config.GetSection("MongoDb");
+            var mongoClient = new MongoClient(MongoDbConfig.GetSection("ConnectionString").Value);
 
-            _addresses = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName)
-                .GetCollection<Address>(mongoDbSettings.Value.CollectionName);
+            _addresses = mongoClient
+                .GetDatabase(MongoDbConfig.GetSection("DatabaseName").Value)
+                .GetCollection<Address>(MongoDbConfig.GetSection("CollectionName").Value);
         }
 
         // Methods:
         public Address? GetLastAdded()
         {
-            return _addresses.Find(new BsonDocument())
+            return _addresses
+                .Find(new BsonDocument())
                 .ToList()
                 .MaxBy(address => address.Created);
         }
@@ -67,7 +70,8 @@ namespace Infrastructure.Repositories
 
             var output =  await Task.Run(() =>
             {
-                return addressesList.AsParallel()
+                return addressesList
+                    .AsParallel()
                     .Where(address => address.City == city)
                     .ToHashSet();
             });
@@ -79,7 +83,7 @@ namespace Infrastructure.Repositories
         {
             var addressesList = _addresses.Find(new BsonDocument()).ToList();
             
-            if (!addressesList.Contains(address))
+            if (addressesList.Contains(address))
             {
                 return null;
             }
@@ -93,7 +97,7 @@ namespace Infrastructure.Repositories
             var addresses = await _addresses.FindAsync(new BsonDocument());
             var addressesList = await addresses.ToListAsync();
             
-            if (!addressesList.Contains(address))
+            if (addressesList.Contains(address))
             {
                 return null;
             }

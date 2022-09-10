@@ -8,7 +8,7 @@ namespace Domain.Entities
         //Variables:
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public Guid Id { get; init; }
+        public ObjectId Id { get; init; }
         
         [BsonElement]
         [BsonRepresentation(BsonType.String)]
@@ -30,7 +30,7 @@ namespace Domain.Entities
         public Address(string city, string street, int houseNumber)
         {
             (City, Street, HouseNumber) = (city, street, houseNumber);
-            Id = Guid.NewGuid();
+            Id = new ObjectId();
             Created = DateTime.UtcNow;
         }
 
