@@ -105,5 +105,26 @@ namespace Infrastructure.Repositories
             await _addresses.InsertOneAsync(address);
             return address;
         }
+
+        public async Task<bool> DeleteByObjectId(ObjectId id)
+        {
+            var addresses = await _addresses.FindAsync(new BsonDocument());
+            var addressesList = await addresses.ToListAsync();
+
+            var output = await Task.Run(() =>
+            {
+                return addressesList
+                    .AsParallel()
+                    .Single(address => address.Id == id);
+            });
+
+            if (output is null)
+            {
+                return false;
+            }
+
+            await _addresses.DeleteOneAsync(output);
+            return true;
+        }
     }
 }

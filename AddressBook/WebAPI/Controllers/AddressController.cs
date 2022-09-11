@@ -1,6 +1,7 @@
 ﻿using Application.DataTransferObjects;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 
 namespace WebAPI.Controllers
 {
@@ -21,7 +22,7 @@ namespace WebAPI.Controllers
 
         //Methods:
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetLastAdded()
         {
             var address = await _addressService.GetLastAddedAsync();
             if (address is null)
@@ -35,7 +36,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet("{city}")]
-        public async Task<IActionResult> Get(string? city)
+        public async Task<IActionResult> GetByCity(string? city)
         {
             if (city is null)
             {
@@ -55,7 +56,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(CreateAddressDto? address)
+        public async Task<IActionResult> PostNewAddress(CreateAddressDto? address)
         {
             if (address is null)
             {
@@ -78,6 +79,18 @@ namespace WebAPI.Controllers
 
             _logger.LogInformation("Added new address");
             return Created($"api/posts/{created.Id}", created);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteByObjectId(ObjectId id)
+        {
+            throw Exception();
+        }
+        
+        [HttpPut]
+        public async Task<IActionResult> PutByObjectId(ObjectId id)
+        {
+            throw Exception();
         }
     }
 }
