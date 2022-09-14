@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using System.Data;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Domain.Entities
@@ -25,6 +26,10 @@ namespace Domain.Entities
         [BsonElement]
         [BsonRepresentation(BsonType.DateTime)]
         public DateTime Created { get; init; }
+        
+        [BsonElement]
+        [BsonRepresentation(BsonType.String)]
+        public string CreatedBy { get; init; }
 
         //Constructors:
         public Address(string city, string street, int houseNumber)
@@ -32,6 +37,7 @@ namespace Domain.Entities
             (City, Street, HouseNumber) = (city, street, houseNumber);
             Id = new ObjectId();
             Created = DateTime.UtcNow;
+            CreatedBy = "admin";
         }
 
         //Methods:

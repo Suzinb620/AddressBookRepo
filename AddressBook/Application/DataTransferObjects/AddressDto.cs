@@ -1,4 +1,6 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using MongoDB.Bson;
 
 namespace Application.DataTransferObjects
@@ -6,7 +8,7 @@ namespace Application.DataTransferObjects
     public class AddressDto
     {
         //Variables:
-        public ObjectId Id { get; set; }
+        public string Id { get; set; }
         public string City { get; set; }
         public string Street { get; set; }
         public int HouseNumber { get; set; }
@@ -14,7 +16,7 @@ namespace Application.DataTransferObjects
         //Constructors:
         public AddressDto(ObjectId id, string city, string street, int houseNumber)
         {
-            (Id, City, Street, HouseNumber) = (id, city, street, houseNumber);
+            (Id, City, Street, HouseNumber) = (id.ToString(), city, street, houseNumber);
         }
 
         //Methods:

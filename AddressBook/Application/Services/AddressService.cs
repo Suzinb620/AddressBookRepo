@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
+using MongoDB.Bson;
 
 namespace Application.Services
 {
@@ -17,6 +18,28 @@ namespace Application.Services
         }
 
         //Methods:
+        public ObjectId? FindObjectId(string id)
+        {
+            return _addressRepository.FindObjectId(id);
+        }
+
+        public async Task<ObjectId?> FindObjectIdAsync(string id)
+        {
+            return await _addressRepository.FindObjectIdAsync(id);
+        }
+
+        public AddressDto? FindByObjectId(ObjectId objectId)
+        {
+            var address = _addressRepository.FindByObjectId(objectId);
+            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+        }
+
+        public async Task<AddressDto?> FindByObjectIdAsync(ObjectId objectId)
+        {
+            var address = await _addressRepository.FindByObjectIdAsync(objectId);
+            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+        }
+
         public AddressDto? GetLastAdded()
         {
             var address = _addressRepository.GetLastAdded();
@@ -68,6 +91,16 @@ namespace Application.Services
             var created = await _addressRepository.AddAsync(new Address(address.City, address.Street, address.HouseNumber));
 
             return created == null ? null : new AddressDto(created.Id, created.City, created.Street, created.HouseNumber);
+        }
+
+        public async Task<bool> DeleteByObjectIdAsync(ObjectId objectId)
+        {
+            return await _addressRepository.DeleteByObjectIdAsync(objectId);
+        }
+        
+        public bool DeleteByObjectId(ObjectId objectId)
+        {
+            return _addressRepository.DeleteByObjectId(objectId);
         }
     }
 }

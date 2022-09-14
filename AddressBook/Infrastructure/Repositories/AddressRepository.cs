@@ -25,6 +25,50 @@ namespace Infrastructure.Repositories
         }
 
         // Methods:
+        public ObjectId? FindObjectId(string id)
+        {
+            return _addresses
+                .Find(new BsonDocument())
+                .ToList()
+                .Single(address => address.Id.ToString() == id)
+                .Id;
+        }
+        
+        public async Task<ObjectId?> FindObjectIdAsync(string id)
+        {
+            var addresses = await _addresses.FindAsync(new BsonDocument());
+            var addressesList = await addresses.ToListAsync();
+            
+            return await Task.Run(() =>
+            {
+                return addressesList
+                    .AsParallel()
+                    .Single(address => address.Id.ToString() == id)
+                    .Id;
+            });
+        }
+
+        public Address FindByObjectId(ObjectId objectId)
+        {
+            return _addresses
+                .Find(new BsonDocument())
+                .ToList()
+                .Single(address => address.Id == objectId);
+        }
+        
+        public async Task<Address> FindByObjectIdAsync(ObjectId objectId)
+        {
+            var addresses = await _addresses.FindAsync(new BsonDocument());
+            var addressesList = await addresses.ToListAsync();
+            
+            return await Task.Run(() =>
+            {
+                return addressesList
+                    .AsParallel()
+                    .Single(address => address.Id == objectId);
+            });
+        }
+        
         public Address? GetLastAdded()
         {
             return _addresses
@@ -106,7 +150,21 @@ namespace Infrastructure.Repositories
             return address;
         }
 
-        public async Task<bool> DeleteByObjectId(ObjectId id)
+        public bool DeleteByObjectId(ObjectId objectId)
+        {
+            var addressesList = _addresses.Find(new BsonDocument()).ToList();
+            var output = addressesList.Single(address => address.Id == objectId);
+
+            if (output is null)
+            {
+                return false;
+            }
+            
+            _addresses.DeleteOne(output.ToBsonDocument());
+            return true;
+        }
+        
+        public async Task<bool> DeleteByObjectIdAsync(ObjectId objectId)
         {
             var addresses = await _addresses.FindAsync(new BsonDocument());
             var addressesList = await addresses.ToListAsync();
@@ -115,16 +173,21 @@ namespace Infrastructure.Repositories
             {
                 return addressesList
                     .AsParallel()
-                    .Single(address => address.Id == id);
+                    .Single(address => address.Id == objectId);
             });
 
             if (output is null)
             {
                 return false;
             }
-
-            await _addresses.DeleteOneAsync(output);
+            
+            await _addresses.DeleteOneAsync(output.ToBsonDocument());
             return true;
         }
+
+        // public async Task<Address?> PutAsync(Address address)
+        // {
+        //     
+        // }
     }
 }

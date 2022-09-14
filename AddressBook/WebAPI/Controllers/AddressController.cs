@@ -1,5 +1,6 @@
 ﻿using Application.DataTransferObjects;
 using Application.Interfaces;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
@@ -9,18 +10,19 @@ namespace WebAPI.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
-        //Variables:
+        // Variables:
         private readonly IAddressService _addressService;
         private readonly ILogger _logger;
 
-        //Constructors:
+        // Constructors:
         public AddressController(IAddressService addressService, ILogger<AddressController> logger)
         {
             _addressService = addressService;
             _logger = logger;
         }
 
-        //Methods:
+        // TODO: Add try catch
+        // Methods:
         [HttpGet]
         public async Task<IActionResult> GetLastAdded()
         {
@@ -34,13 +36,35 @@ namespace WebAPI.Controllers
             _logger.LogInformation("Got the last added address");
             return Ok(address);
         }
+        
+        [HttpGet("id")]
+        public async Task<IActionResult> GetAddressById(string? id)
+        {
+            if (id is null)
+            {
+                _logger.LogError("Attempting to get address by entering empty id");
+                return NotFound();
+            } 
+            
+            var objectId = await _addressService.FindObjectIdAsync(id);
+            if (objectId is null)
+            {
+                _logger.LogError("Attempting to get the address by not exist id");
+                return NotFound();
+            }
+            
+            var address = await _addressService.FindByObjectIdAsync((ObjectId)objectId);
+
+            _logger.LogInformation("Got the address by id");
+            return Ok(address);
+        }
 
         [HttpGet("{city}")]
         public async Task<IActionResult> GetByCity(string? city)
         {
             if (city is null)
             {
-                _logger.LogError("Attempting to get addresses by entering not empty city name");
+                _logger.LogError("Attempting to get addresses by entering empty city name");
                 return NotFound();
             }
             
@@ -82,15 +106,54 @@ namespace WebAPI.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteByObjectId(ObjectId id)
+        public async Task<IActionResult> DeleteByObjectId(string? id)
         {
-            throw Exception();
+            if (id is null)
+            {
+                _logger.LogError("Empty id");
+                return BadRequest();
+            }
+
+            var objectId = await _addressService.FindObjectIdAsync(id);
+            if (objectId is null)
+            {
+                _logger.LogError("Empty id");
+                return BadRequest();
+            }
+            
+            if (!await _addressService.DeleteByObjectIdAsync((ObjectId)objectId))
+            {
+                _logger.LogError("Attempting to delete not existing address");
+                return NotFound();
+            }
+            
+            _logger.LogInformation("Deleted address with id: {id}", id);
+            return Accepted();
         }
         
         [HttpPut]
-        public async Task<IActionResult> PutByObjectId(ObjectId id)
+        public async Task<IActionResult> PutByObjectId(AddressDto? address)
         {
-            throw Exception();
+            // if (address is null)
+            // {
+            //     _logger.LogError("Attempting to add empty address");
+            //     return BadRequest();
+            // }
+            //
+            // if (!ModelState.IsValid)
+            // {
+            //     _logger.LogError("Attempting to add address with invalid data");
+            //     return BadRequest(ModelState);
+            // }
+            
+            //var created = await _addressService.AddAsync(address);
+            throw NotImplementedException;
         }
+
+        // [HttpPatch]
+        // public async Task<IActionResult> PatchByObjectId(string? id)
+        // {
+        //     
+        // }
     }
 }
