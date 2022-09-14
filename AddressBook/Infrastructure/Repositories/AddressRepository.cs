@@ -1,7 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -16,12 +15,12 @@ namespace Infrastructure.Repositories
         // Constructors:
         public AddressRepository(IConfiguration config)
         {
-            var MongoDbConfig = config.GetSection("MongoDb");
-            var mongoClient = new MongoClient(MongoDbConfig.GetSection("ConnectionString").Value);
+            var mongoDbConfig = config.GetSection("MongoDb");
+            var mongoClient = new MongoClient(mongoDbConfig.GetSection("ConnectionString").Value);
 
             _addresses = mongoClient
-                .GetDatabase(MongoDbConfig.GetSection("DatabaseName").Value)
-                .GetCollection<Address>(MongoDbConfig.GetSection("CollectionName").Value);
+                .GetDatabase(mongoDbConfig.GetSection("DatabaseName").Value)
+                .GetCollection<Address>(mongoDbConfig.GetSection("CollectionName").Value);
         }
 
         // Methods:
@@ -48,7 +47,7 @@ namespace Infrastructure.Repositories
             });
         }
 
-        public Address FindByObjectId(ObjectId objectId)
+        public Address? FindByObjectId(ObjectId objectId)
         {
             return _addresses
                 .Find(new BsonDocument())
@@ -56,7 +55,7 @@ namespace Infrastructure.Repositories
                 .Single(address => address.Id == objectId);
         }
         
-        public async Task<Address> FindByObjectIdAsync(ObjectId objectId)
+        public async Task<Address?> FindByObjectIdAsync(ObjectId objectId)
         {
             var addresses = await _addresses.FindAsync(new BsonDocument());
             var addressesList = await addresses.ToListAsync();
