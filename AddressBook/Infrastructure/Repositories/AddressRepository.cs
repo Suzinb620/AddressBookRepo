@@ -163,7 +163,7 @@ namespace Infrastructure.Repositories
             _addresses.DeleteOne(output.ToBsonDocument());
             return true;
         }
-        
+
         public async Task<bool> DeleteByObjectIdAsync(ObjectId objectId)
         {
             var addresses = await _addresses.FindAsync(new BsonDocument());
@@ -185,9 +185,28 @@ namespace Infrastructure.Repositories
             return true;
         }
 
-        // public async Task<Address?> PutAsync(Address address)
-        // {
-        //     
-        // }
+        public Address? Put(Address address)
+        {
+            var toUpdate = FindByObjectId(address.Id);
+            if (toUpdate is null)
+            {
+                return Add(address);
+            }
+
+            _addresses.UpdateOne(toUpdate.ToBsonDocument(), address.ToBsonDocument());
+            return null;
+        }
+
+        public async Task<Address?> PutAsync(Address address)
+        {
+            var toUpdate = await FindByObjectIdAsync(address.Id);
+            if (toUpdate is null)
+            {
+                return await AddAsync(address);
+            }
+
+            await _addresses.UpdateOneAsync(toUpdate.ToBsonDocument(), address.ToBsonDocument());
+            return null;
+        }
     }
 }

@@ -17,5 +17,7 @@ namespace Application.Interfaces
         Task<AddressDto?> AddAsync(CreateAddressDto addressDto);
         bool DeleteByObjectId(ObjectId objectId);
         Task<bool> DeleteByObjectIdAsync(ObjectId objectId);
+        AddressDto? Put(AddressDto addressDto);
+        Task<AddressDto?> PutAsync(AddressDto addressDto);
     }
 }

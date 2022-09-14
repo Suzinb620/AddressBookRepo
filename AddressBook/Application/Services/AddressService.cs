@@ -69,11 +69,12 @@ namespace Application.Services
             var addresses = await _addressRepository.GetByCityAsync(city);
             if (addresses == null) return null;
 
-            var tasks = new List<Task<bool>>();
             var output = new HashSet<AddressDto>();
 
-            foreach (var address in addresses)
-                tasks.Add(Task.Run(() => output.Add(new AddressDto(address.Id, address.City, address.Street, address.HouseNumber))));
+            var tasks = addresses
+                .Select(address => Task.Run(() => output
+                    .Add(new AddressDto(address.Id, address.City, address.Street, address.HouseNumber))))
+                .ToList();
 
             await Task.WhenAll(tasks);
             return output;
@@ -93,14 +94,28 @@ namespace Application.Services
             return created == null ? null : new AddressDto(created.Id, created.City, created.Street, created.HouseNumber);
         }
 
+        public bool DeleteByObjectId(ObjectId objectId)
+        {
+            return _addressRepository.DeleteByObjectId(objectId);
+        }
+        
         public async Task<bool> DeleteByObjectIdAsync(ObjectId objectId)
         {
             return await _addressRepository.DeleteByObjectIdAsync(objectId);
         }
-        
-        public bool DeleteByObjectId(ObjectId objectId)
+
+        public AddressDto? Put(AddressDto addressDto)
         {
-            return _addressRepository.DeleteByObjectId(objectId);
+            var response = _addressRepository.Put(new Address(addressDto.City, addressDto.Street, addressDto.HouseNumber));
+            
+            return response == null ? null : new AddressDto(response.Id, response.City, response.Street, response.HouseNumber);
+        }
+
+        public async Task<AddressDto?> PutAsync(AddressDto addressDto)
+        {
+            var response = await _addressRepository.AddAsync(new Address(addressDto.City, addressDto.Street, addressDto.HouseNumber));
+
+            return response == null ? null : new AddressDto(response.Id, response.City, response.Street, response.HouseNumber);
         }
     }
 }

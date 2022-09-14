@@ -117,37 +117,38 @@ namespace WebAPI.Controllers
             var objectId = await _addressService.FindObjectIdAsync(id);
             if (objectId is null)
             {
-                _logger.LogError("Empty id");
-                return BadRequest();
-            }
-            
-            if (!await _addressService.DeleteByObjectIdAsync((ObjectId)objectId))
-            {
                 _logger.LogError("Attempting to delete not existing address");
                 return NotFound();
             }
-            
-            _logger.LogInformation("Deleted address with id: {id}", id);
+
+            await _addressService.DeleteByObjectIdAsync((ObjectId)objectId);
+
+            _logger.LogInformation("Deleted address with id: {Id}", id);
             return Accepted();
         }
         
         [HttpPut]
         public async Task<IActionResult> PutByObjectId(AddressDto? address)
         {
-            // if (address is null)
-            // {
-            //     _logger.LogError("Attempting to add empty address");
-            //     return BadRequest();
-            // }
-            //
-            // if (!ModelState.IsValid)
-            // {
-            //     _logger.LogError("Attempting to add address with invalid data");
-            //     return BadRequest(ModelState);
-            // }
+             if (address is null)
+             {
+                 _logger.LogError("Attempting to put empty address");
+                 return BadRequest();
+             }
             
-            //var created = await _addressService.AddAsync(address);
-            throw NotImplementedException;
+             if (!ModelState.IsValid)
+             {
+                 _logger.LogError("Attempting to put address with invalid data");
+                 return BadRequest(ModelState);
+             }
+            
+             var response = await _addressService.PutAsync(address);
+             if (response is null)
+             {
+                 return Content("Updated already existed address");
+             }
+
+             return Created($"api/posts/{response.Id}", response);
         }
 
         // [HttpPatch]
