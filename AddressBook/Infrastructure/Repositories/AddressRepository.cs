@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using System.Collections;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
@@ -8,9 +9,10 @@ namespace Infrastructure.Repositories
 {
     public class AddressRepository : IAddressRepository
     {
-        // Variables:
-        private readonly IMongoCollection<Address> _addresses;
         // TODO: add lock
+        
+        // Variables:
+        private readonly IMongoCollection<Address> _addressesCollection;
 
         // Constructors:
         public AddressRepository(IConfiguration config)
@@ -18,161 +20,151 @@ namespace Infrastructure.Repositories
             var mongoDbConfig = config.GetSection("MongoDb");
             var mongoClient = new MongoClient(mongoDbConfig.GetSection("ConnectionString").Value);
 
-            _addresses = mongoClient
+            _addressesCollection = mongoClient
                 .GetDatabase(mongoDbConfig.GetSection("DatabaseName").Value)
                 .GetCollection<Address>(mongoDbConfig.GetSection("CollectionName").Value);
         }
-
+        
         // Methods:
+        private IQueryable<Address> GetAddresses()
+        {
+            return _addressesCollection.AsQueryable();
+        }
+        
+        private async Task<IQueryable<Address>> GetAddressesAsync()
+        {
+            return await Task.Run(GetAddresses);
+        }
+
+        // Interface methods:
         public ObjectId? FindObjectId(string id)
         {
-            return _addresses
-                .Find(new BsonDocument())
-                .ToList()
-                .Single(address => address.Id.ToString() == id)
-                .Id;
+            return GetAddresses()
+                .SingleOrDefault(address => address.Id.ToString() == id)
+                ?.Id;
         }
         
         public async Task<ObjectId?> FindObjectIdAsync(string id)
         {
-            var addresses = await _addresses.FindAsync(new BsonDocument());
-            var addressesList = await addresses.ToListAsync();
+            var addresses = await GetAddressesAsync();
             
             return await Task.Run(() =>
             {
-                return addressesList
+                return addresses
                     .AsParallel()
-                    .Single(address => address.Id.ToString() == id)
-                    .Id;
+                    .SingleOrDefault(address => address.Id.ToString() == id)
+                    ?.Id;
             });
         }
 
         public Address? FindByObjectId(ObjectId objectId)
         {
-            return _addresses
-                .Find(new BsonDocument())
-                .ToList()
-                .Single(address => address.Id == objectId);
+            return GetAddresses().SingleOrDefault(address => address.Id == objectId);
         }
         
         public async Task<Address?> FindByObjectIdAsync(ObjectId objectId)
         {
-            var addresses = await _addresses.FindAsync(new BsonDocument());
-            var addressesList = await addresses.ToListAsync();
-            
+            var addresses = await GetAddressesAsync();
+
             return await Task.Run(() =>
             {
-                return addressesList
+                return addresses
                     .AsParallel()
-                    .Single(address => address.Id == objectId);
+                    .SingleOrDefault(address => address.Id == objectId);
             });
         }
         
         public Address? GetLastAdded()
         {
-            return _addresses
-                .Find(new BsonDocument())
-                .ToList()
-                .MaxBy(address => address.Created);
+            return GetAddresses().MaxBy(address => address.Created);
         }
 
         public async Task<Address?> GetLastAddedAsync()
         {
-            var addresses = await _addresses.FindAsync(new BsonDocument());
-            var addressesList = await addresses.ToListAsync();
-            
+            var addresses = await GetAddressesAsync();
+
             return await Task.Run(() =>
             {
-                return addressesList.AsParallel().MaxBy(address => address.Created);
+                return addresses.AsParallel().MaxBy(address => address.Created);
             });
         }
 
         public IEnumerable<Address>? GetByCity(string city)
         {
-            var addressesList = _addresses.Find(new BsonDocument()).ToList();
-
-            if (!addressesList.Any())
+            var addresses = GetAddresses();
+            if (!addresses.Any())
             {
                 return null;
             }
 
-            var output = addressesList.Where(address => address.City == city).ToHashSet();
-            
-            return output.Any() ? output : null;
+            var output = addresses.Where(address => address.City == city);
+            return output.ToArray().Any() ? output : null;
         }
         
         public async Task<IEnumerable<Address>?> GetByCityAsync(string city)
         {
-            var addresses = await _addresses.FindAsync(new BsonDocument());
-            var addressesList = await addresses.ToListAsync();
-            
-            if (!addressesList.Any())
+            var addresses = await GetAddressesAsync();
+            if (!addresses.Any())
             {
                 return null;
             }
 
             var output =  await Task.Run(() =>
             {
-                return addressesList
+                return addresses
                     .AsParallel()
                     .Where(address => address.City == city)
-                    .ToHashSet();
+                    .AsQueryable();
             });
-            
-            return output.Any() ? output : null;
+            return output.ToArray().Any() ? output : null;
         }
 
-        public Address? Add(Address address)
+        public Address? Add(Address newAddress)
         {
-            var addressesList = _addresses.Find(new BsonDocument()).ToList();
-            
-            if (addressesList.Contains(address))
+            var addresses = GetAddresses();
+            if (addresses.AsEnumerable().Contains(newAddress))
             {
                 return null;
             }
 
-            _addresses.InsertOne(address);
-            return address;
+            _addressesCollection.InsertOne(newAddress);
+            return newAddress;
         }
         
-        public async Task<Address?> AddAsync(Address address)
+        public async Task<Address?> AddAsync(Address newAddress)
         {
-            var addresses = await _addresses.FindAsync(new BsonDocument());
-            var addressesList = await addresses.ToListAsync();
-            
-            if (addressesList.Contains(address))
+            var addresses = await GetAddressesAsync();
+            if (addresses.AsEnumerable().Contains(newAddress))
             {
                 return null;
             }
 
-            await _addresses.InsertOneAsync(address);
-            return address;
+            await _addressesCollection.InsertOneAsync(newAddress);
+            return newAddress;
         }
 
         public bool DeleteByObjectId(ObjectId objectId)
         {
-            var addressesList = _addresses.Find(new BsonDocument()).ToList();
-            var output = addressesList.Single(address => address.Id == objectId);
+            var addresses = GetAddresses();
+            var output = addresses.SingleOrDefault(address => address.Id == objectId);
 
             if (output is null)
             {
                 return false;
             }
             
-            _addresses.DeleteOne(output.ToBsonDocument());
+            _addressesCollection.DeleteOne(output.ToBsonDocument());
             return true;
         }
 
         public async Task<bool> DeleteByObjectIdAsync(ObjectId objectId)
         {
-            var addresses = await _addresses.FindAsync(new BsonDocument());
-            var addressesList = await addresses.ToListAsync();
-
+            var addresses = await GetAddressesAsync();
             var output = await Task.Run(() =>
             {
-                return addressesList
+                return addresses
                     .AsParallel()
-                    .Single(address => address.Id == objectId);
+                    .SingleOrDefault(address => address.Id == objectId);
             });
 
             if (output is null)
@@ -180,32 +172,49 @@ namespace Infrastructure.Repositories
                 return false;
             }
             
-            await _addresses.DeleteOneAsync(output.ToBsonDocument());
+            await _addressesCollection.DeleteOneAsync(output.ToBsonDocument());
             return true;
         }
 
-        public Address? Put(Address address)
+        public ReplaceOneResult? Put(Address address)
         {
-            var toUpdate = FindByObjectId(address.Id);
-            if (toUpdate is null)
+            var filter = FindByObjectId(address.Id);
+            return _addressesCollection.ReplaceOne(filter.ToBsonDocument(), address, new ReplaceOptions
             {
-                return Add(address);
-            }
-
-            _addresses.UpdateOne(toUpdate.ToBsonDocument(), address.ToBsonDocument());
-            return null;
+                IsUpsert = true
+            });
         }
 
-        public async Task<Address?> PutAsync(Address address)
+        public async Task<ReplaceOneResult?> PutAsync(Address address)
         {
-            var toUpdate = await FindByObjectIdAsync(address.Id);
-            if (toUpdate is null)
+            var filter = await GetAddressesAsync();
+
+            return await _addressesCollection.ReplaceOneAsync(filter.ToJson(), address, new ReplaceOptions
             {
-                return await AddAsync(address);
+                IsUpsert = true
+            });
+        }
+
+        public UpdateResult? Patch(Address newAddress)
+        {
+            var oldAddress = FindByObjectId(newAddress.Id);
+            return oldAddress is null 
+                ? null 
+                : _addressesCollection
+                    .UpdateOne(oldAddress.ToBsonDocument(), newAddress.ToBsonDocument());
+        }
+
+        public async Task<UpdateResult?> PatchAsync(Address address)
+        {
+            var found = await FindByObjectIdAsync(address.Id);
+            
+            if (found is null)
+            {
+                return null;
             }
 
-            await _addresses.UpdateOneAsync(toUpdate.ToBsonDocument(), address.ToBsonDocument());
-            return null;
+            return await _addressesCollection
+                .UpdateOneAsync(found.ToBsonDocument(), address.ToBsonDocument());
         }
     }
 }

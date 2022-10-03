@@ -117,7 +117,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostNewAddress(CreateAddressDto? address)
+        public async Task<IActionResult> PostAddress(CreateAddressDto? address)
         {
             try
             {
@@ -191,7 +191,7 @@ namespace WebAPI.Controllers
         }
         
         [HttpPut]
-        public async Task<IActionResult> PutByObjectId(AddressDto? address)
+        public async Task<IActionResult> PutAddress(AddressDto? address)
         {
             try
             {
@@ -210,12 +210,75 @@ namespace WebAPI.Controllers
                 var response = await _addressService.PutAsync(address);
                 if (response is null)
                 {
-                    _logger.LogInformation("Updated address with id: {Id}", address.Id);
-                    return Content($"Updated address with id: {address.Id}");
+                    _logger.LogError("Attempting to put address with empty id");
+                    return BadRequest(ModelState);
+                }
+                
+                if (response.UpsertedId is null)
+                {
+                    if (response.ModifiedCount == 0)
+                    {
+                        var message = $"Updated 0 rows in address with id: {address.Id}";
+                        _logger.LogInformation(message);
+                        return Content(message);
+                    }
+                    else
+                    {
+                        var message = $"Updated {response.ModifiedCount} rows in address with id: {address.Id}";
+                        _logger.LogInformation(message);
+                        return Content(message);
+                    }
                 }
 
-                _logger.LogInformation("Added new address with id: {Id}", response.Id);
-                return Created($"api/posts/{response.Id}", response);
+                _logger.LogInformation("Added new address with id: {Id}", response.UpsertedId.ToString());
+                return Created($"api/posts/{response.UpsertedId}", response);
+            }
+            catch (UnauthorizedAccessException e)
+            { 
+                _logger.LogCritical("Exception: {Message}", e.Message);
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical("Exception: {Message}", e.Message);
+                return StatusCode(500);
+            }
+        }
+
+        [HttpPatch]
+        public async Task<IActionResult> PatchAddress(AddressDto? address)
+        {
+            try
+            {
+                if (address is null)
+                {
+                    _logger.LogError("Attempting to put empty address");
+                    return BadRequest();
+                }
+            
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogError("Attempting to put address with invalid data");
+                    return BadRequest(ModelState);
+                }
+            
+                var response = await _addressService.PatchAsync(address);
+                if (response is null)
+                {
+                    _logger.LogError("Attempting to put address with empty id");
+                    return BadRequest(ModelState);
+                }
+                
+                if (response.ModifiedCount == 0)
+                {
+                    var message = $"Updated 0 rows in address with id: {address.Id}";
+                    _logger.LogInformation(message);
+                    return Content(message);
+                }
+                
+                var msg = $"Updated {response.ModifiedCount} rows in address with id: {address.Id}";
+                _logger.LogInformation(msg);
+                return Content(msg);
             }
             catch (UnauthorizedAccessException e)
             {
@@ -228,11 +291,5 @@ namespace WebAPI.Controllers
                 return StatusCode(500);
             }
         }
-
-        // [HttpPatch]
-        // public async Task<IActionResult> PatchByObjectId(string? id)
-        // {
-        //     
-        // }
     }
 }

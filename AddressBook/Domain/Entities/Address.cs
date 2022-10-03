@@ -9,7 +9,7 @@ namespace Domain.Entities
         //Variables:
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public ObjectId Id { get; init; }
+        public ObjectId Id { get; set; }
         
         [BsonElement]
         [BsonRepresentation(BsonType.String)]
@@ -25,21 +25,32 @@ namespace Domain.Entities
         
         [BsonElement]
         [BsonRepresentation(BsonType.DateTime)]
-        public DateTime Created { get; init; }
+        public DateTime Updated { get; set; }
+
+        [BsonElement]
+        [BsonRepresentation(BsonType.DateTime)]
+        public DateTime Created { get; set; }
         
         [BsonElement]
         [BsonRepresentation(BsonType.String)]
-        public string CreatedBy { get; init; }
+        public string CreatedBy { get; set; }
 
         //Constructors:
+        [BsonConstructor]
+        public Address()
+        {
+            
+        }
+        
         public Address(string city, string street, int houseNumber)
         {
             (City, Street, HouseNumber) = (city, street, houseNumber);
             Id = new ObjectId();
+            Updated = DateTime.UtcNow;
             Created = DateTime.UtcNow;
             CreatedBy = "admin";
         }
-
+        
         //Methods:
         public override bool Equals(object? obj)
         {

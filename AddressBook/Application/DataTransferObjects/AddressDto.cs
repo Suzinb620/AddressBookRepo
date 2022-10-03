@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using MongoDB.Bson;
 
 namespace Application.DataTransferObjects
@@ -9,7 +10,7 @@ namespace Application.DataTransferObjects
     {
         //Variables:
         [Required]
-        [RegularExpression("/^[a-f\\d]{24}$/i")] // Validate MongoDb ObjectId
+        [RegularExpression("^[a-fA-F0-9]{24}$")] // Validate MongoDb ObjectId
         public string Id { get; set; }
         
         [Required]
@@ -27,6 +28,12 @@ namespace Application.DataTransferObjects
         public int HouseNumber { get; set; }
 
         //Constructors:
+        [JsonConstructor]
+        public AddressDto()
+        {
+            
+        }
+
         public AddressDto(ObjectId id, string city, string street, int houseNumber)
         {
             (Id, City, Street, HouseNumber) = (id.ToString(), city, street, houseNumber);

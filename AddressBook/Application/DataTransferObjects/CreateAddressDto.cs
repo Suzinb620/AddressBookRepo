@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Application.DataTransferObjects
-{ public class CreateAddressDto
+{
+    public class CreateAddressDto
     {
         //Variables:
         [Required]
@@ -17,5 +19,11 @@ namespace Application.DataTransferObjects
         [Required]
         [Range(1, 1000)]
         public int HouseNumber { get; set; }
+
+        [JsonConstructor]
+        public CreateAddressDto()
+        {
+            
+        }
     }
 }

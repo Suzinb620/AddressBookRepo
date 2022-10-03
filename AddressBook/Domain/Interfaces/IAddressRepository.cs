@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace Domain.Interfaces
 {
@@ -17,7 +18,9 @@ namespace Domain.Interfaces
         Task<Address?> AddAsync(Address address);
         Task<bool> DeleteByObjectIdAsync(ObjectId objectId);
         bool DeleteByObjectId(ObjectId objectId);
-        Address? Put(Address address);
-        Task<Address?> PutAsync(Address address);
+        ReplaceOneResult? Put(Address address);
+        Task<ReplaceOneResult?> PutAsync(Address address);
+        UpdateResult? Patch(Address address);
+        Task<UpdateResult?> PatchAsync(Address address);
     }
 }

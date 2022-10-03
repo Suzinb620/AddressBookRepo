@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
 using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace Application.Services
 {
@@ -31,50 +32,80 @@ namespace Application.Services
         public AddressDto? FindByObjectId(ObjectId objectId)
         {
             var address = _addressRepository.FindByObjectId(objectId);
-            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+            return address == null ? null : new AddressDto
+            {
+                Id = address.Id.ToString(), 
+                City = address.City, 
+                Street = address.Street, 
+                HouseNumber = address.HouseNumber
+            };
         }
 
         public async Task<AddressDto?> FindByObjectIdAsync(ObjectId objectId)
         {
             var address = await _addressRepository.FindByObjectIdAsync(objectId);
-            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+            return address == null ? null : new AddressDto            
+            {
+                Id = address.Id.ToString(), 
+                City = address.City, 
+                Street = address.Street, 
+                HouseNumber = address.HouseNumber
+            };
         }
 
         public AddressDto? GetLastAdded()
         {
             var address = _addressRepository.GetLastAdded();
-            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+            return address == null ? null : new AddressDto
+            {
+                Id = address.Id.ToString(), 
+                City = address.City, 
+                Street = address.Street, 
+                HouseNumber = address.HouseNumber
+            };
         }
         
         public async Task<AddressDto?> GetLastAddedAsync()
         {
             var address = await _addressRepository.GetLastAddedAsync();
-            return address == null ? null : new AddressDto(address.Id, address.City, address.Street, address.HouseNumber);
+            return address == null ? null : new AddressDto
+            {
+                Id = address.Id.ToString(), 
+                City = address.City, 
+                Street = address.Street, 
+                HouseNumber = address.HouseNumber
+            };
         }
 
         public IEnumerable<AddressDto>? GetByCity(string city)
         {
             var addresses = _addressRepository.GetByCity(city);
-            if (addresses == null) return null;
-
-            var output = new HashSet<AddressDto>();
-            foreach (var address in addresses)
-                output.Add(new AddressDto(address.Id, address.City, address.Street, address.HouseNumber));
-
-            return output;
+            return addresses?.Select(address => new AddressDto
+            {
+                Id = address.Id.ToString(), 
+                City = address.City, 
+                Street = address.Street, 
+                HouseNumber = address.HouseNumber
+            });
         }
         
         public async Task<IEnumerable<AddressDto>?> GetByCityAsync(string city)
         {
             var addresses = await _addressRepository.GetByCityAsync(city);
-            if (addresses == null) return null;
+            if (addresses is null)
+            {
+                return null;
+            }
 
-            var output = new HashSet<AddressDto>();
+            var output = new List<AddressDto>();
 
-            var tasks = addresses
-                .Select(address => Task.Run(() => output
-                    .Add(new AddressDto(address.Id, address.City, address.Street, address.HouseNumber))))
-                .ToList();
+            var tasks = addresses.Select(address => Task.Run(() => output.Add(new AddressDto
+            {
+                Id = address.Id.ToString(), 
+                City = address.City, 
+                Street = address.Street, 
+                HouseNumber = address.HouseNumber
+            })));
 
             await Task.WhenAll(tasks);
             return output;
@@ -82,16 +113,46 @@ namespace Application.Services
 
         public AddressDto? Add(CreateAddressDto address)
         {
-           var created = _addressRepository.Add(new Address(address.City, address.Street, address.HouseNumber));
+           var created = _addressRepository.Add(new Address
+           {
+               Id = new ObjectId(),
+               City =  address.City,
+               Street = address.Street,
+               HouseNumber = address.HouseNumber,
+               Updated = DateTime.UtcNow,
+               Created = DateTime.UtcNow,
+               CreatedBy = "admin"
+           });
 
-           return created == null ? null : new AddressDto(created.Id, created.City, created.Street, created.HouseNumber);
+           return created is null ? null : new AddressDto
+           {
+               Id = created.Id.ToString(), 
+               City = created.City, 
+               Street = created.Street, 
+               HouseNumber = created.HouseNumber
+           };
         }
         
         public async Task<AddressDto?> AddAsync(CreateAddressDto address)
         {
-            var created = await _addressRepository.AddAsync(new Address(address.City, address.Street, address.HouseNumber));
+            var created = await _addressRepository.AddAsync(new Address
+            {
+                Id = new ObjectId(),
+                City =  address.City,
+                Street = address.Street,
+                HouseNumber = address.HouseNumber,
+                Updated = DateTime.UtcNow,
+                Created = DateTime.UtcNow,
+                CreatedBy = "admin"
+            });
 
-            return created == null ? null : new AddressDto(created.Id, created.City, created.Street, created.HouseNumber);
+            return created is null ? null : new AddressDto
+            {
+                Id = created.Id.ToString(), 
+                City = created.City, 
+                Street = created.Street, 
+                HouseNumber = created.HouseNumber
+            };
         }
 
         public bool DeleteByObjectId(ObjectId objectId)
@@ -104,18 +165,72 @@ namespace Application.Services
             return await _addressRepository.DeleteByObjectIdAsync(objectId);
         }
 
-        public AddressDto? Put(AddressDto addressDto)
+        public ReplaceOneResult? Put(AddressDto addressDto)
         {
-            var response = _addressRepository.Put(new Address(addressDto.City, addressDto.Street, addressDto.HouseNumber));
+            var id = ObjectId.Parse(addressDto.Id);
+            var response = _addressRepository.FindByObjectId(id);
             
-            return response == null ? null : new AddressDto(response.Id, response.City, response.Street, response.HouseNumber);
+            return _addressRepository.Put(new Address
+            {
+                Id = id,
+                City =  addressDto.City,
+                Street = addressDto.Street,
+                HouseNumber = addressDto.HouseNumber,
+                Updated = DateTime.UtcNow,
+                Created = response?.Created ?? DateTime.Now,
+                CreatedBy = response?.CreatedBy ?? "admin"
+            });
         }
 
-        public async Task<AddressDto?> PutAsync(AddressDto addressDto)
+        public async Task<ReplaceOneResult?> PutAsync(AddressDto addressDto)
         {
-            var response = await _addressRepository.AddAsync(new Address(addressDto.City, addressDto.Street, addressDto.HouseNumber));
+            var id = ObjectId.Parse(addressDto.Id);
+            var response = await _addressRepository.FindByObjectIdAsync(id);
+            
+            return await _addressRepository.PutAsync(new Address
+            {
+                Id = id,
+                City =  addressDto.City,
+                Street = addressDto.Street,
+                HouseNumber = addressDto.HouseNumber,
+                Updated = DateTime.UtcNow,
+                Created = response?.Created ?? DateTime.Now,
+                CreatedBy = response?.CreatedBy ?? "admin"
+            });
+        }
 
-            return response == null ? null : new AddressDto(response.Id, response.City, response.Street, response.HouseNumber);
+        public UpdateResult? Patch(AddressDto addressDto)
+        {
+            var id = ObjectId.Parse(addressDto.Id);
+            var response = _addressRepository.FindByObjectId(id);
+            
+            return _addressRepository.Patch(new Address
+            {
+                Id = id,
+                City =  addressDto.City,
+                Street = addressDto.Street,
+                HouseNumber = addressDto.HouseNumber,
+                Updated = DateTime.UtcNow,
+                Created = response?.Created ?? DateTime.Now,
+                CreatedBy = response?.CreatedBy ?? "admin"
+            });
+        }
+
+        public async Task<UpdateResult?> PatchAsync(AddressDto addressDto)
+        {
+            var id = ObjectId.Parse(addressDto.Id);
+            var response = await _addressRepository.FindByObjectIdAsync(id);
+            
+            return await _addressRepository.PatchAsync(new Address
+            {
+                Id = id,
+                City =  addressDto.City,
+                Street = addressDto.Street,
+                HouseNumber = addressDto.HouseNumber,
+                Updated = DateTime.UtcNow,
+                Created = response?.Created ?? DateTime.Now,
+                CreatedBy = response?.CreatedBy ?? "admin"
+            });
         }
     }
 }
